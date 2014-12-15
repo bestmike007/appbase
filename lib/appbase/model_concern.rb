@@ -38,10 +38,10 @@ module AppBase
       end
       
       @@crud = {}
-      def crud=(str)
+      def crud(str)
         @@crud[self] = str
       end
-      def crud
+      def model_crud
         @@crud.has_key?(self) ? @@crud[self] : 'crud'
       end
       

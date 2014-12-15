@@ -42,7 +42,7 @@ module AppBase
       if !user_identity.respond_to?(:authenticate_by_token) || user_identity.method(:authenticate_by_token).parameters.count != 2
         raise "It's required to implement UserIdentity.authenticate_by_token(user, token):UserIdentity method."
       end
-      user_identity.crud = ''
+      user_identity.crud ''
       # common methods
       ab_extend = %-
         def current_user(options={})
@@ -57,7 +57,7 @@ module AppBase
       app.config.appbase.models.each { |m|
         model = Object.const_get m.to_sym
         # add crud methods
-        crud = model.crud || ''
+        crud = model.model_crud || ''
         if !crud.index('c').nil?
           if model.respond_to?(:can_create?)
             if model.method(:can_create?).parameters.count != 2
