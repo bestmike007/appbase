@@ -238,12 +238,26 @@ module AppBase
           if parameters.count == 0 || parameters[0][0] != :req
             raise "#{m}.#{mn} does not accept current user identity as the first parameter. Using `before_authenticate :method_name` to expose #{m}#{mn} to appbase without user authentication."
           end
-          parameters = parameters[1..-1]
-          requires = parameters.find_all{|p|p[0]==:req}.map{|p|":#{p[1]}"}
+          need_params = false
+          if parameters.last[0] == :opt
+            need_params = true
+            parameters = parameters[1..-2]
+          else
+            parameters = parameters[1..-1]
+          end
+          if parameters.find{|p|p[0]!=:req}
+            raise "Error exposing #{m}.#{mn} to appbase engine, appbase does not support rest/optional parameters, use options instead!"
+          end
+          requires = parameters.map{|p|":#{p[1]}"}
+          parameters = ['current_user']
+          requires.each { |p| parameters << "params[#{p}]" }
+          if need_params
+            parameters.push "params.except(:action, :controller#{requires.count > 0 ? ", #{requires.join(', ')}" : ""})"
+          end
           ab_extend += %-
             def rpc_#{m.to_s.underscore}_#{mn}
               #{requires.map{|p|"params.require #{p}"}.join(';')}
-              render json: { status: 'ok', data: #{m}.#{mn}(current_user, #{parameters.map{|p|"params[:#{p[1]}]"}.join(', ')}) }
+              render json: { status: 'ok', data: #{m}.#{mn}(#{parameters.join(', ')}) }
             rescue Exception => e
               render json: { status: 'error', msg: e.to_s }
             end
@@ -259,11 +273,26 @@ module AppBase
           end
           ab_method = model.method mn.to_sym
           parameters = ab_method.parameters
-          requires = parameters.find_all{|p|p[0]==:req}.map{|p|":#{p[1]}"}
+          need_params = false
+          if parameters.last[0] == :opt
+            need_params = true
+            parameters = parameters[0..-2]
+          else
+            parameters = parameters[0..-1]
+          end
+          if parameters.find{|p|p[0]!=:req}
+            raise "Error exposing #{m}.#{mn} to appbase engine, appbase does not support rest/optional parameters. To expose method with optional parameters, use options parameter (e.g def m1(p1, p2, options={}) ) instead."
+          end
+          requires = parameters.map{|p|":#{p[1]}"}
+          parameters = []
+          requires.each { |p| parameters << "params[#{p}]" }
+          if need_params
+            parameters.push "params.except(:action, :controller#{requires.count > 0 ? ", #{requires.join(', ')}" : ""})"
+          end
           ab_extend += %-
             def rpc_#{m.to_s.underscore}_#{mn}
               #{requires.map{|p|"params.require #{p}"}.join(';')}
-              render json: { status: 'ok', data: #{m}.#{mn}(#{parameters.map{|p|"params[:#{p[1]}]"}.join(', ')}) }
+              render json: { status: 'ok', data: #{m}.#{mn}(#{parameters.join(', ')}) }
             rescue Exception => e
               render json: { status: 'error', msg: e.to_s }
             end
