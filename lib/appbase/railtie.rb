@@ -45,13 +45,15 @@ module AppBase
       user_identity.crud = ''
       # common methods
       ab_extend = %-
-        def current_user
+        def current_user(options={})
           if #{app.config.appbase.token_store}[:#{app.config.appbase.token_key_user}].nil? || #{app.config.appbase.token_store}[:#{app.config.appbase.token_key_session}].nil?
+            return options[:default] if options.has_key? :default
             raise "unauthenticated"
           end
           #{app.config.appbase.user_identity}.authenticate_by_token(#{app.config.appbase.token_store}[:#{app.config.appbase.token_key_user}], #{app.config.appbase.token_store}[:#{app.config.appbase.token_key_session}])
         end
       -
+      # per model method stubs
       app.config.appbase.models.each { |m|
         model = Object.const_get m.to_sym
         # add crud methods
@@ -228,12 +230,39 @@ module AppBase
         
         # add appbase model methods stubs
         model.appbase_methods.each do |mn|
+          if !model.respond_to? mn.to_sym
+            raise "#{m} does not respond to #{mn}."
+          end
+          ab_method = model.method mn.to_sym
+          parameters = ab_method.parameters
+          if parameters.count == 0 || parameters[0][0] != :req
+            raise "#{m}.#{mn} does not accept current user identity as the first parameter. Using `before_authenticate :method_name` to expose #{m}#{mn} to appbase without user authentication."
+          end
+          parameters = parameters[1..-1]
+          requires = parameters.find_all{|p|p[0]==:req}.map{|p|":#{p[1]}"}
+          ab_extend += %-
+            def rpc_#{m.to_s.underscore}_#{mn}
+              #{requires.map{|p|"params.require #{p}"}.join(';')}
+              render json: { status: 'ok', data: #{m}.#{mn}(current_user, #{parameters.map{|p|"params[:#{p[1]}]"}.join(', ')}) }
+            rescue Exception => e
+              render json: { status: 'error', msg: e.to_s }
+            end
+          -
+          AppBase::Engine.routes.append do
+            post "/#{m.to_s.underscore}/#{mn}" => "app_base#rpc_#{m.to_s.underscore}_#{mn}"
+          end
+        end
+        # add appbase model methods stubs before authentication
+        model.appbase_methods_without_authentication.each do |mn|
+          if !model.respond_to? mn.to_sym
+            raise "#{m} does not respond to #{mn}."
+          end
           ab_method = model.method mn.to_sym
           parameters = ab_method.parameters
           requires = parameters.find_all{|p|p[0]==:req}.map{|p|":#{p[1]}"}
           ab_extend += %-
             def rpc_#{m.to_s.underscore}_#{mn}
-              params.require(#{requires.join(', ')})
+              #{requires.map{|p|"params.require #{p}"}.join(';')}
               render json: { status: 'ok', data: #{m}.#{mn}(#{parameters.map{|p|"params[:#{p[1]}]"}.join(', ')}) }
             rescue Exception => e
               render json: { status: 'error', msg: e.to_s }
@@ -245,7 +274,6 @@ module AppBase
         end
         
       }
-      puts ab_extend
       AppBaseController.module_eval ab_extend
       
       AppBase::Engine.routes.draw do

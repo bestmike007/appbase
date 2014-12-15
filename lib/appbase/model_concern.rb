@@ -14,17 +14,27 @@ module AppBase
         appbase_methods = @@appbase_methods[self] || []
         method_names.each do |method_name|
           if appbase_methods.index(method_name).nil?
-            if self.respond_to? method_name
-              appbase_methods << method_name
-            else
-              Rails.logger.warn "#{self} does not have method #{method_name}"
-            end
+            appbase_methods << method_name
           end
         end
         @@appbase_methods[self] = appbase_methods
       end
       def appbase_methods
         @@appbase_methods[self] || []
+      end
+      
+      @@appbase_methods_without_authentication = {}
+      def before_authenticate(*method_names)
+        appbase_methods = @@appbase_methods_without_authentication[self] || []
+        method_names.each do |method_name|
+          if appbase_methods.index(method_name).nil?
+            appbase_methods << method_name
+          end
+        end
+        @@appbase_methods_without_authentication[self] = appbase_methods
+      end
+      def appbase_methods_without_authentication
+        @@appbase_methods_without_authentication[self] || []
       end
       
       @@crud = {}
