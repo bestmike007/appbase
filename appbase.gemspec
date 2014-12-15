@@ -8,9 +8,9 @@ Gem::Specification.new do |s|
   s.authors     = ["bestmike007"]
   s.email       = 'i@bestmike007.com'
   s.homepage    = 'http://bestmike007.com/appbase'
-  s.license       = 'MIT'
-  s.files = Dir['lib/**/*']
-  s.test_files = Dir.glob("spec/**/*")
+  s.license     = 'MIT'
+  s.files       = Dir['lib/**/*']
+  s.test_files  = Dir.glob("spec/**/*")
   
   s.add_runtime_dependency 'activesupport', '~> 4.0'
   s.add_development_dependency "rake", "~> 0.8.7"
