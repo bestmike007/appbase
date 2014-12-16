@@ -81,7 +81,7 @@ module AppBase
                 render json: { status: "error", msg: "unauthorized" }
               else
                 obj.save
-                render json: { status: 'ok' }
+                render json: { status: 'ok', id: obj.id }
               end
             rescue Exception => e
               render json: { status: 'error', msg: e.to_s }
