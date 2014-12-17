@@ -1,0 +1,299 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Appbase by bestmike007</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/bestmike007/appbase">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/bestmike007/appbase/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/bestmike007/appbase/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Appbase</h1>
+          <p>A lightweight backend for Web/iOS/Android apps.</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/bestmike007">bestmike007</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <p>Nowadays BaaS and mBaaS platforms (e.g. <a href="https://www.firebase.com/">firebase</a>, <a href="https://www.parse.com/">parse</a>, <a href="https://appbase.io/">appbase.io</a> abound. Open source solutions (e.g. <a href="http://usergrid.incubator.apache.org/">usergrid</a> using LAMP, <a href="http://helios.io/">helios</a> using Ruby, <a href="http://deployd.com/">deployd</a> and <a href="http://strongloop.com/">StrongLoop</a> using nodejs, and a lot more) are also available. And appbase is much less than those.</p>
+
+<p>What is appbase? Appbase is a lightweight backend based on rails for rubyists with the following basic features:</p>
+
+<ul>
+<li>User registration and authentication</li>
+<li>REST model crud api</li>
+<li>Expose business logic with a simple line of code</li>
+<li>3rd party authentication</li>
+<li>Push notifications</li>
+<li>Payment integration</li>
+<li>Other basic features mostly required by apps</li>
+</ul>
+
+<p>Appbase is/does not:</p>
+
+<ul>
+<li>Use GUI to configure models and/or business logic</li>
+<li>Use configuration files</li>
+</ul>
+
+<p>Appbase is under development; and will be kept as simple as possible.</p>
+
+<h2>
+<a id="basic-usage" class="anchor" href="#basic-usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Basic Usage</h2>
+
+<p>Configure in <code>application.rb</code>:</p>
+
+<div class="highlight highlight-ruby"><pre>  <span class="pl-c"># default: '/appbase'</span>
+  <span class="pl-c"># config.appbase.mount = "/_api"</span>
+  config.appbase.user_identity <span class="pl-k">=</span> <span class="pl-c1">:User</span> <span class="pl-c"># required</span>
+  config.appbase.token_store <span class="pl-k">=</span> <span class="pl-c1">:cookies</span> <span class="pl-c"># :cookies, :headers, :params</span>
+  config.appbase.token_key_user <span class="pl-k">=</span> <span class="pl-c1">:u</span>
+  config.appbase.token_key_session <span class="pl-k">=</span> <span class="pl-c1">:s</span>
+  config.appbase.models.push <span class="pl-c1">:User</span>, <span class="pl-c1">:Role</span>, <span class="pl-c1">:Permission</span>, <span class="pl-c1">:UserProfile</span>, <span class="pl-c1">:TodoItem</span>, <span class="pl-c1">:GroupTodoList</span></pre></div>
+
+<p>Implement <code>UserIdentityModel#authenticate_by_token(user, token)</code>:</p>
+
+<div class="highlight highlight-ruby"><pre>  <span class="pl-k">class</span> <span class="pl-en">User<span class="pl-e"> &lt; ActiveRecord::Base</span></span>
+    <span class="pl-k">def</span> <span class="pl-en">self.authenticate_by_token</span>(<span class="pl-vpf">user</span>, <span class="pl-vpf">token</span>)
+      <span class="pl-c"># TODO cache the result</span>
+      <span class="pl-s3">User</span>.find_by(<span class="pl-c1">user:</span> user, <span class="pl-c1">token:</span> token)
+    <span class="pl-k">end</span>
+  <span class="pl-k">end</span></pre></div>
+
+<p>Set up CRUD permissions for models:</p>
+
+<div class="highlight highlight-ruby"><pre>  <span class="pl-k">class</span> <span class="pl-en">TodoItem<span class="pl-e"> &lt; ActiveRecord::Base</span></span>
+
+    <span class="pl-c"># Allow query</span>
+    allow_query <span class="pl-c1">:mine</span>
+    <span class="pl-c"># or</span>
+    allow_query <span class="pl-c1">:within</span> =&gt; <span class="pl-c1">:related_to_me</span>
+    <span class="pl-k">def</span> <span class="pl-en">self.related_to_me</span>(<span class="pl-vpf">current_user</span>)
+      <span class="pl-s3">TodoItem</span>.where <span class="pl-c1">user_id:</span> current_user.id
+    <span class="pl-k">end</span>
+    <span class="pl-c"># or</span>
+    allow_query <span class="pl-c1">:within</span> <span class="pl-k">do </span>|<span class="pl-vo">current_user</span>|
+      <span class="pl-s3">TodoItem</span>.where <span class="pl-c1">user_id:</span> current_user.id
+    <span class="pl-k">end</span>
+
+    <span class="pl-c"># Allow create/update/delete</span>
+    allow_create <span class="pl-c1">:mine</span>
+    <span class="pl-c"># or</span>
+    allow_update <span class="pl-c1">:if</span> =&gt; <span class="pl-c1">:related_to_me?</span>
+    <span class="pl-k">def</span> <span class="pl-en">self.related_to_me?</span>(<span class="pl-vpf">current_user</span>, <span class="pl-vpf">obj</span>)
+      obj.user_id <span class="pl-k">==</span> current_user.id
+    <span class="pl-k">end</span>
+    <span class="pl-c"># or</span>
+    allow_delete <span class="pl-c1">:if</span> <span class="pl-k">do </span>|<span class="pl-vo">current_user</span>, <span class="pl-vo">obj</span>|
+      obj.user_id <span class="pl-k">==</span> current_user.id
+    <span class="pl-k">end</span>
+
+  <span class="pl-k">end</span></pre></div>
+
+<p>Expose business logic methods:</p>
+
+<div class="highlight highlight-ruby"><pre>
+  <span class="pl-c"># don't have to be an active record</span>
+  <span class="pl-k">class</span> <span class="pl-en">GroupTodoList</span>
+
+    <span class="pl-k">include</span> <span class="pl-s3">AppBase</span>::<span class="pl-vo">ModelConcern</span>
+
+    expose_to_appbase <span class="pl-c1">:list_group_todos</span>, <span class="pl-c1">auth:</span> <span class="pl-c1">true</span> <span class="pl-c"># default to true</span>
+
+    <span class="pl-k">def</span> <span class="pl-en">self.list_group_todos</span>(<span class="pl-vpf">current_user</span>)
+      <span class="pl-s3">TodoItem</span>.find_all <span class="pl-c1">group_id:</span> current_user.group_id
+    <span class="pl-k">end</span>
+
+  <span class="pl-k">end</span>
+
+  <span class="pl-c"># public methods, e.g. authentication, does not have the `current_user` parameter</span>
+  <span class="pl-k">class</span> <span class="pl-en">User<span class="pl-e"> &lt; ActiveRecord::Base</span></span>
+
+    expose_to_appbase <span class="pl-c1">:authenticate</span>, <span class="pl-c1">:external_auth</span>, <span class="pl-c1">auth:</span> <span class="pl-c1">false</span>
+
+    <span class="pl-k">def</span> <span class="pl-en">self.authenticate</span>(<span class="pl-vpf">user</span>, <span class="pl-vpf">pass</span>)
+      user <span class="pl-k">=</span> <span class="pl-s3">User</span>.find_by <span class="pl-c1">username:</span> user, <span class="pl-c1">password:</span> pass
+      <span class="pl-k">return</span> <span class="pl-c1">nil</span> <span class="pl-k">if</span> user.nil?
+      user.last_login <span class="pl-k">=</span> <span class="pl-s3">Time</span>.now
+      user.session_token <span class="pl-k">=</span> <span class="pl-s3">SecureRandom</span>.hex
+      user.save!
+      user.session_token
+    <span class="pl-k">end</span>
+
+    <span class="pl-k">def</span> <span class="pl-en">self.external_auth</span>(<span class="pl-vpf">user</span>, <span class="pl-vpf">options</span><span class="pl-k">=</span>{})
+      <span class="pl-k">case</span> options[<span class="pl-c1">:provider</span>]
+      <span class="pl-k">when</span> <span class="pl-s1"><span class="pl-pds">'</span>twitter<span class="pl-pds">'</span></span>
+        <span class="pl-c"># do authenticate</span>
+      <span class="pl-k">when</span> <span class="pl-s1"><span class="pl-pds">'</span>facebook<span class="pl-pds">'</span></span>
+        <span class="pl-c"># do authenticate</span>
+      <span class="pl-k">else</span>
+        <span class="pl-k">raise</span> <span class="pl-s1"><span class="pl-pds">"</span>unsupported provider<span class="pl-pds">"</span></span>
+      <span class="pl-k">end</span>
+    <span class="pl-k">end</span>
+
+  <span class="pl-k">end</span></pre></div>
+
+<p>And that's all. </p>
+
+<h2>
+<a id="the-request-scheme" class="anchor" href="#the-request-scheme" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Request Scheme</h2>
+
+<p>Apps (including iOS app, Andriod app, web app with angularjs or similar frontend framework, etc.) are communicating with appbase using HTTP/HTTPS.</p>
+
+<h3>
+<a id="the-rest-api" class="anchor" href="#the-rest-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>The REST API</h3>
+
+<p>Basic CRUD api conforms to the representational state transfer (REST) architectural style. Following sections are using model <code>Note (id, title, content)</code> as an example to illustrate how a model is created, updated, deleted, and how to perform a query on a model (Supose that the appbase engine is mount on <code>/_api</code>).</p>
+
+<h4>
+<a id="create" class="anchor" href="#create" aria-hidden="true"><span class="octicon octicon-link"></span></a>Create</h4>
+
+<p>Request to create a model with JSON serialized body:</p>
+
+<pre><code>PUT /_api/note HTTP/1.1
+HOST xxx
+Content-Type: application/json
+
+{ "title" : "test" , "content" : "hello", "user_id" : 1 }
+</code></pre>
+
+<p>The server response on success:</p>
+
+<pre><code>HTTP/1.1 200 OK
+
+{"status":"ok","id":1}
+</code></pre>
+
+<p>On failure:</p>
+
+<pre><code>HTTP/1.1 200 OK
+
+{"status":"error","msg":"error_msg"}
+</code></pre>
+
+<h4>
+<a id="update" class="anchor" href="#update" aria-hidden="true"><span class="octicon octicon-link"></span></a>Update</h4>
+
+<p>Almost the same as create except for adding the <code>:id</code> parameter (e.g. <code>/_api/note/:id</code>):</p>
+
+<pre><code>PUT /_api/note/1 HTTP/1.1
+HOST xxx
+Content-Type: application/json
+
+{ "title" : "test" , "content" : "hello appabse!", "user_id" : 1 }
+</code></pre>
+
+<h4>
+<a id="delete" class="anchor" href="#delete" aria-hidden="true"><span class="octicon octicon-link"></span></a>Delete</h4>
+
+<pre><code>DELETE /_api/note/1 HTTP/1.1
+HOST xxx
+</code></pre>
+
+<h4>
+<a id="query" class="anchor" href="#query" aria-hidden="true"><span class="octicon octicon-link"></span></a>Query</h4>
+
+<p>The request:</p>
+
+<pre><code>GET /_api/note?p=1&amp;ps=20 HTTP/1.1
+HOST xxx
+</code></pre>
+
+<p>In the parameters, <code>p</code> indicates the page of the query; <code>ps</code> indicates the page size of the query. Except for the pagination parameters, query parameters are allowed to filter the query. Supose we need to perform a query on <code>Note.id</code>, here are some examples on how to query:</p>
+
+<ul>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id=1</code> Equal to 1</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.lt=10</code> Less than 10</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.le=10</code> Less than or equal to 10</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.gt=1</code> Greater than 1</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.ge=1</code> Greater than or equal to 1</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.lt=10&amp;id.ge=1</code> Greater than or equal to 1 and less than 10</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.in=[1,2,3]</code> In 1, 2, 3</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.nin=[1,2,3]</code> Not in 1, 2, 3</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.n=true</code> Is null</li>
+<li>/_api/note?p=1&amp;ps=20<code>&amp;id.nn=true</code> Not null</li>
+</ul>
+
+<p><code>OR</code> conditions are not supported for now, use exposed methods instead.</p>
+
+<h3>
+<a id="rpc-methods" class="anchor" href="#rpc-methods" aria-hidden="true"><span class="octicon octicon-link"></span></a>RPC Methods</h3>
+
+<p>Model methods with custom business logic can be exposed as rpc methods, take the method <code>Note.related_to_me(current_user, limit)</code> as example.</p>
+
+<pre><code>POST /_api/note/related_to_me HTTP/1.1
+HOST xxx
+
+limit=10
+</code></pre>
+
+<p>Response from the backend should be:</p>
+
+<pre><code>HTTP/1.1 200 OK
+
+{"status":"ok","data":[{"id":1,"key":"value"},{"id":2,"key":"value"},{"id":3,"key":"value"}]}
+</code></pre>
+
+<p>If the method is defined with an <code>options</code> parameter, e.g. <code>Note.related_to_me(current_user, options={})</code>, then optional request arguments are passed to the method within the option hash object.</p>
+
+<h2>
+<a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Known Issues</h2>
+
+<ul>
+<li>Unexpected error when a model has been changed on development environment (using spring)</li>
+<li>
+<code>OR</code> conditions are not supported for active record query</li>
+<li>Unable to restrict query on specific column(s)</li>
+<li>Multiple accessible query base</li>
+<li>Write test cases</li>
+<li>Complete the document</li>
+</ul>
+
+<p>You're welcome to contribute to this project by creating an issue / a pull request.</p>
+
+<hr>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>Appbase is released under the <a href="http://opensource.org/licenses/MIT">MIT License</a>.</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-29233497-3");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
