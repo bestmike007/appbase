@@ -25,7 +25,7 @@ class AppBaseController < ActionController::Base
     def add_create_stub(model)
       m = model.name
       permits = model.columns.map { |item| item.name }.to_json
-      self.module_eval %-
+      self.class_eval %-
         def create_#{AppBase.underscore m}
           obj = #{m}.new(params.except(:action, :controller, :id).permit(#{permits}))
           if !#{m}.allow_create?(current_user, obj)
@@ -43,7 +43,7 @@ class AppBaseController < ActionController::Base
     def add_update_stub(model)
       m = model.name
       permits = model.columns.map { |item| item.name }.to_json
-      self.module_eval %-
+      self.class_eval %-
         def update_#{AppBase.underscore m}
           obj = #{m}.find(params[:id])
           if obj.nil?
@@ -64,7 +64,7 @@ class AppBaseController < ActionController::Base
     
     def add_delete_stub(model)
       m = model.name
-      self.module_eval %-
+      self.class_eval %-
         def delete_#{AppBase.underscore m}
           obj = #{m}.find(params[:id])
           if obj.nil?
@@ -90,38 +90,40 @@ class AppBaseController < ActionController::Base
           query = #{m}.accessible_by(current_user)
           params.except(:action, :controller, :p, :ps).each { |k, v|
             op = 'eq'
+            k = k.to_s
             if k.index('.') && k.split('.').count == 2
               k, op = k.split('.')
             end
-            return if #{columns}.index(k).nil?
-            case op
-            when 'eq'
-              query = query.where "\#{k} = ?", v
-            when 'lt'
-              query = query.where "\#{k} < ?", v
-            when 'le'
-              query = query.where "\#{k} <= ?", v
-            when 'gt'
-              query = query.where "\#{k} > ?", v
-            when 'ge'
-              query = query.where "\#{k} >= ?", v
-            when 'n'
-              query = query.where "\#{k} IS NULL"
-            when 'nn'
-              query = query.where "\#{k} IS NOT NULL"
-            when 'in'
-              values = JSON.parse v
-              query = query.where "\#{k} IN (?)", values
-            when 'nin'
-              values = JSON.parse v
-              query = query.where "\#{k} NOT IN (?)", values
-            else
+            unless #{columns}.index(k).nil?
+              case op
+              when 'eq'
+                query = query.where "\#{k} = ?", v
+              when 'lt'
+                query = query.where "\#{k} < ?", v
+              when 'le'
+                query = query.where "\#{k} <= ?", v
+              when 'gt'
+                query = query.where "\#{k} > ?", v
+              when 'ge'
+                query = query.where "\#{k} >= ?", v
+              when 'n'
+                query = query.where "\#{k} IS NULL"
+              when 'nn'
+                query = query.where "\#{k} IS NOT NULL"
+              when 'in'
+                values = JSON.parse v
+                query = query.where "\#{k} IN (?)", values
+              when 'nin'
+                values = JSON.parse v
+                query = query.where "\#{k} NOT IN (?)", values
+              else
+              end
             end
           }
           page_size = [1, (params[:ps]||20).to_i].max
           start = [0, (params[:p]||1).to_i.pred].max * page_size
           render json: { status: 'ok', data: query.offset(start).limit(page_size) }
-        rescue Exception => e
+        rescue e
           render json: { status: 'error', msg: e.to_s }
         end
       -
