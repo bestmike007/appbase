@@ -1,9 +1,8 @@
 require 'active_support'
 
-lambda {
-
 module AppBase
-  module ActiveRecordConcern
+  
+  module ModelConcern
   
     extend ActiveSupport::Concern
     
@@ -39,27 +38,35 @@ module AppBase
               end
             -
           end
-        elsif criteria == :if && block_given? && block.parameters.count == (crud == :query ? 1 : 2)
+        elsif crud != :query && criteria == :if && block_given? && block.parameters.count == 2
           # allow_xxx :if do; end
           AppBase::Engine.after_initialized do
             user_identity_attr = "#{AppBase::Engine::UserIdentity.underscore}_id"
-            if crud == :query
-              model.define_singleton_method :accessible_by, &block
-            else
-              model.define_singleton_method "allow_#{crud}".to_sym, &block
-            end
+            model.define_singleton_method "allow_#{crud}".to_sym, &block
           end
-        elsif criteria.instance_of?(Hash) && criteria.has_key?(:if) && criteria[:if].instance_of?(Symbol)
+        elsif crud == :query && criteria == :within && block_given? && block.parameters.count == 1
+          # allow_query :within {|current_user| Model.where(...)}
+          AppBase::Engine.after_initialized do
+            user_identity_attr = "#{AppBase::Engine::UserIdentity.underscore}_id"
+            model.define_singleton_method :accessible_by, &block
+          end
+        elsif crud != :query && riteria.instance_of?(Hash) && criteria.has_key?(:if) && criteria[:if].instance_of?(Symbol)
           # :if => :a_singleton_method
           AppBase::Engine.after_initialized do
             user_identity_attr = "#{AppBase::Engine::UserIdentity.underscore}_id"
-            model.class_eval crud == :query ? %-
-              def self.accessible_by(user)
-                #{model.name}.#{criteria[:if]} user
-              end
-            - : %-
+            model.class_eval %-
               def self.allow_#{crud}?(user, obj)
                 #{model.name}.#{criteria[:if]} user
+              end
+            -
+          end
+        elsif crud == :query && criteria.instance_of?(Hash) && criteria.has_key?(:within) && criteria[:within].instance_of?(Symbol)
+          # allow_query :within => :a_singleton_query_method
+          AppBase::Engine.after_initialized do
+            user_identity_attr = "#{AppBase::Engine::UserIdentity.underscore}_id"
+            model.class_eval %-
+              def self.accessible_by(user)
+                #{model.name}.#{criteria[:within]} user
               end
             -
           end
@@ -67,8 +74,8 @@ module AppBase
           raise %-
             allow_#{crud} usage:
               allow_#{crud} :mine
-              allow_#{crud} :if => :a_singleton_method
-              allow_#{crud} :if do |current_user_identity#{ crud == :query ? '' : ', model_instance' }|
+              allow_#{crud} :#{ crud == :query ? 'within' : 'if' } => :a_singleton_method
+              allow_#{crud} :#{ crud == :query ? 'within' : 'if' } do |current_user_identity#{ crud == :query ? '' : ', model_instance' }|
                 # #{ crud == :query ? 'return fitlered query, e.g. Note.where(:user_id => current_user_identity.id)' : 'return true if allowed' }
               end
           -
@@ -95,8 +102,7 @@ module AppBase
     end
     
   end
+  
 end
 
-ActiveRecord::Base.include AppBase::ActiveRecordConcern
-
-}.call
+ActiveRecord::Base.include AppBase::ModelConcern
