@@ -123,7 +123,7 @@ class AppBaseController < ActionController::Base
           page_size = [1, (params[:ps]||20).to_i].max
           start = [0, (params[:p]||1).to_i.pred].max * page_size
           render json: { status: 'ok', data: query.offset(start).limit(page_size) }
-        rescue e
+        rescue Exception => e
           render json: { status: 'error', msg: e.to_s }
         end
       -

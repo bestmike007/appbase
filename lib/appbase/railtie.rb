@@ -81,6 +81,7 @@ module AppBase
         blocks.each do |block|
           block.call
         end
+        initialized = true
         
       end
       
