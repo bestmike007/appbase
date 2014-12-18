@@ -134,10 +134,10 @@ class AppBaseController < ActionController::Base
       mn = bound_method.name
       parameters = bound_method.parameters
       if auth && (parameters.count == 0 || parameters[0][0] != :req)
-        raise "#{m}.#{mn} does not accept current user identity as the first parameter. Using `expose_to_appbase :method_name, atuh: false` to expose #{m}.#{mn} to appbase without user authentication."
+        raise "#{m}.#{mn} does not accept current user identity as the first parameter. Using `expose_to_appbase :method_name, auth: false` to expose #{m}.#{mn} to appbase without user authentication."
       end
       need_params = false
-      if parameters.last[0] == :opt
+      if parameters.count > 0 && parameters.last[0] == :opt
         need_params = true
         parameters = parameters[(auth ? 1 : 0)..-2]
       else
