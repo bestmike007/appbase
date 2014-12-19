@@ -190,4 +190,6 @@ module AppBase
   
 end
 
-ActiveRecord::Base.include AppBase::ModelConcern
+class ActiveRecord::Base
+  include AppBase::ModelConcern
+end
