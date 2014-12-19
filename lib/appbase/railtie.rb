@@ -105,6 +105,7 @@ module AppBase
 
     # default values for appbase configuration
     config.appbase = ActiveSupport::OrderedOptions.new
+    config.appbase.enabled = false
     config.appbase.mount = "/appbase"
     config.appbase.user_identity = nil
     config.appbase.token_store = :cookies # :cookies, :headers, :params
@@ -114,10 +115,12 @@ module AppBase
     
     initializer "appbase.configure_route", :after => :add_routing_paths do |app|
       
-      AppBase::Engine.bootstrap app.config
-      
-      app.routes.append do
-        mount AppBase::Engine => Rails.application.config.appbase.mount
+      if config.appbase.enabled
+        AppBase::Engine.bootstrap app.config
+        
+        app.routes.append do
+          mount AppBase::Engine => Rails.application.config.appbase.mount
+        end
       end
       
     end

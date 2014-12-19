@@ -1,0 +1,16 @@
+language: ruby
+rvm:
+  - 1.9.3
+  - 2.0.0
+  - 2.1.1
+  - jruby-head
+  - rbx
+before_script:
+  - "export DISPLAY=:99.0"
+  - "cd rails_test"
+  - "bundle install"
+  - "RAILS_ENV=test bin/rake db:setup"
+script: bundle exec rspec
+matrix:
+  allow_failures:
+    - rvm: rbx

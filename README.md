@@ -22,6 +22,8 @@ Appbase is under development; and will be kept as simple as possible.
 Configure in `application.rb`:
 
 ``` ruby
+  # enable appbase
+  config.appbase.enabled = true
   # default: '/appbase'
   # config.appbase.mount = "/_api"
   config.appbase.user_identity = :User # required

@@ -17,7 +17,12 @@ class AppBaseController < ActionController::Base
             return options[:default] if options.has_key? :default
             raise "unauthenticated"
           end
-          #{user_identity}.authenticate_by_token(#{token_store}[:#{token_key_user}], #{token_store}[:#{token_key_session}])
+          user = #{user_identity}.authenticate_by_token(#{token_store}[:#{token_key_user}], #{token_store}[:#{token_key_session}])
+          if user.nil?
+            return options[:default] if options.has_key? :default
+            raise "unauthenticated"
+          end
+          user
         end
       -
     end
