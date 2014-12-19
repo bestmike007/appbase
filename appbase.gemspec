@@ -12,6 +12,7 @@ Gem::Specification.new do |s|
   s.files       = Dir['lib/**/*']
   s.test_files  = Dir.glob("spec/**/*")
   
+  s.required_ruby_version = '>= 1.9.0'
   s.add_runtime_dependency 'activesupport', '~> 4.0'
   s.add_development_dependency "rake", "~> 0.8.7"
   s.add_development_dependency "rspec", '~> 0'

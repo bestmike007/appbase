@@ -71,6 +71,22 @@ Set up CRUD permissions for models:
       obj.user_id == current_user.id
     end
     
+    # restrict_query_columns usage:
+    #   restrict_query_columns <only | except>: <single_column | column_list>
+    # examples:
+    #   restrict_query_columns only: [:user_id, :created_at, :updated_at]
+    #   restrict_query_columns only: :updated_at
+    #   restrict_query_columns except: [:content]
+    restrict_query_columns only: [:updated_at, :created_at]
+    
+    # restrict_query_operators usage:
+    #   restrict_query_operators :column1, :column2, <only | except>: <:equal | :compare | :in>
+    # examples:
+    #   restrict_query_operators :user_id, :created_at, :updated_at, only: [:equal, :compare]
+    #   restrict_query_operators :user_id, :created_at, :updated_at, except: :in
+    #   restrict_query_operators :title, only: :equal
+    restrict_query_operators :updated_at, :created_at, except: :in
+    
   end
 ```
 
@@ -223,9 +239,7 @@ If the method is defined with an `options` parameter, e.g. `Note.related_to_me(c
 
 ## Known Issues
 
-+ Unexpected error when a model has been changed on development environment (using spring)
 + `OR` conditions are not supported for active record query
-+ Unable to restrict query on specific column(s)
 + Multiple accessible query base
 + Write test cases
 + Complete the document

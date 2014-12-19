@@ -84,20 +84,105 @@ module AppBase
       end
       
       def allow_create(criteria=:mine, &block)
-        self.appbase_allow(:create, criteria, &block)
+        appbase_allow(:create, criteria, &block)
       end
       
       def allow_update(criteria=:mine, &block)
-        self.appbase_allow(:update, criteria, &block)
+        appbase_allow(:update, criteria, &block)
       end
       
       def allow_delete(criteria=:mine, &block)
-        self.appbase_allow(:delete, criteria, &block)
+        appbase_allow(:delete, criteria, &block)
       end
       
       def allow_query(criteria=:mine, &block)
-        self.appbase_allow(:query, criteria, &block)
+        appbase_allow(:query, criteria, &block)
       end
+      
+      def restrict_query_columns(options={})
+        show_usage = proc {
+          raise %-
+            restrict_query_columns usage:
+              restrict_query_columns <only | except>: <single_column | column_list>
+            examples:
+              restrict_query_columns only: [:user_id, :created_at, :updated_at]
+              restrict_query_columns only: :updated_at
+              restrict_query_columns except: [:content]
+          -
+        }
+        show_usage.call if !options || !options.instance_of?(Hash)
+        columns = self.columns.map{|c|c.name.to_sym}
+        # on columns
+        if options.has_key? :only
+          on_columns = options[:only]
+          on_columns = [on_columns] if on_columns.instance_of?(String) || on_columns.instance_of?(Symbol)
+          show_usage.call unless on_columns.instance_of?(Array)
+          on_columns = on_columns.map {|c|c.to_sym}
+          columns &= on_columns
+        end
+        # except columns
+        if options.has_key? :except
+          except_columns = options[:except]
+          except_columns = [except_columns] if except_columns.instance_of?(String) || except_columns.instance_of?(Symbol)
+          show_usage.call unless except_columns.instance_of?(Array)
+          except_columns = except_columns.map {|c|c.to_sym}
+          columns -= except_columns
+        end
+        
+        self.define_singleton_method :appbase_queryable_columns do
+          columns
+        end
+        
+      end
+      
+      def appbase_queryable_operators
+        return {}
+      end
+        
+      def restrict_query_operators(*columns)
+        show_usage = proc {
+          raise %-
+            restrict_query_operators usage:
+              restrict_query_operators :column1, :column2, <only | except>: <:equal | :compare | :in>
+            examples:
+              restrict_query_operators :user_id, :created_at, :updated_at, only: [:equal, :compare]
+              restrict_query_operators :user_id, :created_at, :updated_at, except: :in
+              restrict_query_operators :title, only: :equal
+          -
+        }
+        show_usage.call if columns.count < 2 || !columns.last.instance_of?(Hash)
+        *columns, options = columns
+        show_usage.call unless options.has_key?(:only) || options.has_key?(:except)
+        operators = appbase_queryable_operators
+        
+        set = [:equal, :compare, :in]
+        # on columns
+        if options.has_key? :only
+          allows = options[:only]
+          allows = [allows] if allows.instance_of?(String) || allows.instance_of?(Symbol)
+          show_usage.call unless allows.instance_of?(Array)
+          allows = allows.map {|c|c.to_sym}
+          set &= allows
+        end
+        # except columns
+        if options.has_key? :except
+          excepts = options[:except]
+          excepts = [excepts] if excepts.instance_of?(String) || excepts.instance_of?(Symbol)
+          show_usage.call unless excepts.instance_of?(Array)
+          excepts = excepts.map {|c|c.to_sym}
+          set -= excepts
+        end
+        
+        columns.each do |c|
+          operators[c.to_sym] = set
+        end
+        
+        self.define_singleton_method :appbase_queryable_operators do
+          operators
+        end
+        
+      end
+      
       
     end
     

@@ -94,28 +94,34 @@ class AppBaseController < ActionController::Base
             if k.index('.') && k.split('.').count == 2
               k, op = k.split('.')
             end
-            unless #{columns}.index(k).nil?
+            k = k.to_sym
+            operators = #{m}.appbase_queryable_operators[k]
+            unless #{m}.appbase_queryable_columns.index(k).nil?
               case op
               when 'eq'
-                query = query.where "\#{k} = ?", v
+                query = query.where "\#{k} = ?", v if operators.nil? || !operators.index(:equal).nil?
               when 'lt'
-                query = query.where "\#{k} < ?", v
+                query = query.where "\#{k} < ?", v if operators.nil? || !operators.index(:compare).nil?
               when 'le'
-                query = query.where "\#{k} <= ?", v
+                query = query.where "\#{k} <= ?", v if operators.nil? || !operators.index(:compare).nil?
               when 'gt'
-                query = query.where "\#{k} > ?", v
+                query = query.where "\#{k} > ?", v if operators.nil? || !operators.index(:compare).nil?
               when 'ge'
-                query = query.where "\#{k} >= ?", v
+                query = query.where "\#{k} >= ?", v if operators.nil? || !operators.index(:compare).nil?
               when 'n'
-                query = query.where "\#{k} IS NULL"
+                query = query.where "\#{k} IS NULL" if operators.nil? || !operators.index(:equal).nil?
               when 'nn'
-                query = query.where "\#{k} IS NOT NULL"
+                query = query.where "\#{k} IS NOT NULL" if operators.nil? || !operators.index(:equal).nil?
               when 'in'
-                values = JSON.parse v
-                query = query.where "\#{k} IN (?)", values
+                if operators.nil? || !operators.index(:in).nil?
+                  values = JSON.parse v
+                  query = query.where "\#{k} IN (?)", values
+                end
               when 'nin'
-                values = JSON.parse v
-                query = query.where "\#{k} NOT IN (?)", values
+                if operators.nil? || !operators.index(:in).nil?
+                  values = JSON.parse v
+                  query = query.where "\#{k} NOT IN (?)", values
+                end
               else
               end
             end

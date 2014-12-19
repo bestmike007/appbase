@@ -19,6 +19,8 @@ module AppBase
   
   module Registry
     
+    # rpc & crud methods registration
+    # used once upon rails startup, cannot be reloaded by spring.
     class << Registry
       
       rpc_methods = []
