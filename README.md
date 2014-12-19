@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/bestmike007/appbase.svg?branch=master)](https://travis-ci.org/bestmike007/appbase)
 
-Nowadays BaaS and mBaaS platforms (e.g. [firebase](https://www.firebase.com/), [parse](https://www.parse.com/), [appbase.io](https://appbase.io/) abound. Open source solutions (e.g. [usergrid](http://usergrid.incubator.apache.org/) using LAMP, [helios](http://helios.io/) using Ruby, [deployd](http://deployd.com/) and [StrongLoop](http://strongloop.com/) using nodejs, and a lot more) are also available. And appbase is much less than those.
+Nowadays BaaS and mBaaS platforms (e.g. [firebase](https://www.firebase.com/), [parse](https://www.parse.com/), [appbase.io](https://appbase.io/)) abound. Open source solutions (e.g. [usergrid](http://usergrid.incubator.apache.org/) using LAMP, [helios](http://helios.io/) using Ruby, [deployd](http://deployd.com/) and [StrongLoop](http://strongloop.com/) using nodejs, and a lot more) are also available. And appbase is much less than those.
 
 What is appbase? Appbase is a lightweight backend based on rails for rubyists with the following basic features:
 
@@ -245,7 +245,7 @@ If the method is defined with an `options` parameter, e.g. `Note.related_to_me(c
 
 + `OR` conditions are not supported for active record query
 + Multiple accessible query base
-+ Write test cases
++ Write more test cases
 + Complete the document
 
 You're welcome to contribute to this project by creating an issue / a pull request.
