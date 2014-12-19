@@ -38,7 +38,9 @@
           <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
         </div>
 
-        <p>Nowadays BaaS and mBaaS platforms (e.g. <a href="https://www.firebase.com/">firebase</a>, <a href="https://www.parse.com/">parse</a>, <a href="https://appbase.io/">appbase.io</a> abound. Open source solutions (e.g. <a href="http://usergrid.incubator.apache.org/">usergrid</a> using LAMP, <a href="http://helios.io/">helios</a> using Ruby, <a href="http://deployd.com/">deployd</a> and <a href="http://strongloop.com/">StrongLoop</a> using nodejs, and a lot more) are also available. And appbase is much less than those.</p>
+        <p><a href="https://travis-ci.org/bestmike007/appbase"><img src="https://travis-ci.org/bestmike007/appbase.svg?branch=master" alt="Build Status"></a></p>
+
+<p>Nowadays BaaS and mBaaS platforms (e.g. <a href="https://www.firebase.com/">firebase</a>, <a href="https://www.parse.com/">parse</a>, <a href="https://appbase.io/">appbase.io</a>) abound. Open source solutions (e.g. <a href="http://usergrid.incubator.apache.org/">usergrid</a> using LAMP, <a href="http://helios.io/">helios</a> using Ruby, <a href="http://deployd.com/">deployd</a> and <a href="http://strongloop.com/">StrongLoop</a> using nodejs, and a lot more) are also available. And appbase is much less than those.</p>
 
 <p>What is appbase? Appbase is a lightweight backend based on rails for rubyists with the following basic features:</p>
 
@@ -66,7 +68,9 @@
 
 <p>Configure in <code>application.rb</code>:</p>
 
-<div class="highlight highlight-ruby"><pre>  <span class="pl-c"># default: '/appbase'</span>
+<div class="highlight highlight-ruby"><pre>  <span class="pl-c"># enable appbase</span>
+  config.appbase.enabled <span class="pl-k">=</span> <span class="pl-c1">true</span>
+  <span class="pl-c"># default: '/appbase'</span>
   <span class="pl-c"># config.appbase.mount = "/_api"</span>
   config.appbase.user_identity <span class="pl-k">=</span> <span class="pl-c1">:User</span> <span class="pl-c"># required</span>
   config.appbase.token_store <span class="pl-k">=</span> <span class="pl-c1">:cookies</span> <span class="pl-c"># :cookies, :headers, :params</span>
@@ -282,7 +286,7 @@ limit=10
 <li>
 <code>OR</code> conditions are not supported for active record query</li>
 <li>Multiple accessible query base</li>
-<li>Write test cases</li>
+<li>Write more test cases</li>
 <li>Complete the document</li>
 </ul>
 
