@@ -115,7 +115,11 @@ module AppBase
     
     initializer "appbase.configure_route", :after => :add_routing_paths do |app|
       
-      if config.appbase.enabled && (File.basename($0) != 'rake' || $*[0] == 'routes')
+      if File.basename(ENV['_']) == 'rake'
+        puts "Running with `rake #{$*.join(' ')}`"
+      end
+      
+      if config.appbase.enabled && (File.basename(ENV['_']) != 'rake' || $*[0] == 'routes')
         AppBase::Engine.bootstrap app.config
         
         app.routes.append do
