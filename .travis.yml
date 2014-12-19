@@ -9,5 +9,5 @@ before_script:
   - "export DISPLAY=:99.0"
   - "cd rails_test"
   - "bundle install"
-  - "RAILS_ENV=test"
+  - "rake db:setup RAILS_ENV=test"
 script: rspec
