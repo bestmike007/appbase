@@ -1,43 +1,36 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Appbase by bestmike007</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="Appbase : A lightweight backend for Web/iOS/Android apps.">
 
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Appbase</title>
   </head>
+
   <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/bestmike007/appbase">View On GitHub</a></li>
-          <li class="downloads"><a href="https://github.com/bestmike007/appbase/zipball/master">ZIP</a></li>
-          <li class="downloads"><a href="https://github.com/bestmike007/appbase/tarball/master">TAR</a></li>
-          <li class="title">DOWNLOADS</li>
-        </nav>
-      </div><!-- end header -->
 
-    <div class="wrapper">
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/bestmike007/appbase">View on GitHub</a>
 
-      <section>
-        <div id="title">
-          <h1>Appbase</h1>
-          <p>A lightweight backend for Web/iOS/Android apps.</p>
-          <hr>
-          <span class="credits left">Project maintained by <a href="https://github.com/bestmike007">bestmike007</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
-        </div>
+          <h1 id="project_title">Appbase</h1>
+          <h2 id="project_tagline">A lightweight backend for Web/iOS/Android apps.</h2>
 
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/bestmike007/appbase/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/bestmike007/appbase/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
         <p>Nowadays BaaS and mBaaS platforms (e.g. <a href="https://www.firebase.com/">firebase</a>, <a href="https://www.parse.com/">parse</a>, <a href="https://appbase.io/">appbase.io</a> abound. Open source solutions (e.g. <a href="http://usergrid.incubator.apache.org/">usergrid</a> using LAMP, <a href="http://helios.io/">helios</a> using Ruby, <a href="http://deployd.com/">deployd</a> and <a href="http://strongloop.com/">StrongLoop</a> using nodejs, and a lot more) are also available. And appbase is much less than those.</p>
 
 <p>What is appbase? Appbase is a lightweight backend based on rails for rubyists with the following basic features:</p>
@@ -110,6 +103,22 @@
     allow_delete <span class="pl-c1">:if</span> <span class="pl-k">do </span>|<span class="pl-vo">current_user</span>, <span class="pl-vo">obj</span>|
       obj.user_id <span class="pl-k">==</span> current_user.id
     <span class="pl-k">end</span>
+
+    <span class="pl-c"># restrict_query_columns usage:</span>
+    <span class="pl-c">#   restrict_query_columns &lt;only | except&gt;: &lt;single_column | column_list&gt;</span>
+    <span class="pl-c"># examples:</span>
+    <span class="pl-c">#   restrict_query_columns only: [:user_id, :created_at, :updated_at]</span>
+    <span class="pl-c">#   restrict_query_columns only: :updated_at</span>
+    <span class="pl-c">#   restrict_query_columns except: [:content]</span>
+    restrict_query_columns <span class="pl-c1">only:</span> [<span class="pl-c1">:updated_at</span>, <span class="pl-c1">:created_at</span>]
+
+    <span class="pl-c"># restrict_query_operators usage:</span>
+    <span class="pl-c">#   restrict_query_operators :column1, :column2, &lt;only | except&gt;: &lt;:equal | :compare | :in&gt;</span>
+    <span class="pl-c"># examples:</span>
+    <span class="pl-c">#   restrict_query_operators :user_id, :created_at, :updated_at, only: [:equal, :compare]</span>
+    <span class="pl-c">#   restrict_query_operators :user_id, :created_at, :updated_at, except: :in</span>
+    <span class="pl-c">#   restrict_query_operators :title, only: :equal</span>
+    restrict_query_operators <span class="pl-c1">:updated_at</span>, <span class="pl-c1">:created_at</span>, <span class="pl-c1">except:</span> <span class="pl-c1">:in</span>
 
   <span class="pl-k">end</span></pre></div>
 
@@ -263,10 +272,8 @@ limit=10
 <a id="known-issues" class="anchor" href="#known-issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Known Issues</h2>
 
 <ul>
-<li>Unexpected error when a model has been changed on development environment (using spring)</li>
 <li>
 <code>OR</code> conditions are not supported for active record query</li>
-<li>Unable to restrict query on specific column(s)</li>
 <li>Multiple accessible query base</li>
 <li>Write test cases</li>
 <li>Complete the document</li>
@@ -281,9 +288,16 @@ limit=10
 
 <p>Appbase is released under the <a href="http://opensource.org/licenses/MIT">MIT License</a>.</p>
       </section>
-
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Appbase maintained by <a href="https://github.com/bestmike007">bestmike007</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
               <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
@@ -294,6 +308,7 @@ limit=10
             pageTracker._trackPageview();
             } catch(err) {}
           </script>
+
 
   </body>
 </html>
