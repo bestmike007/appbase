@@ -2,7 +2,7 @@ PATH
   remote: ..
   specs:
     appbase (0.0.2)
-      activesupport (~> 4.0)
+      rails (>= 4.0, < 4.2)
 
 GEM
   remote: https://rubygems.org/

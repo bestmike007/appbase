@@ -25,5 +25,10 @@ RSpec.describe AppBaseController, :type => :routing do
     expect(AppBaseController.instance_methods(false).index(:rpc_note_recent_notes).nil?).to be false
     expect(:post => "/note/recent_notes").to route_to("app_base#rpc_note_recent_notes")
   end
+  
+  it "contains routes to user_note model" do
+    expect(AppBaseController.instance_methods(false).index(:query_user_note).nil?).to be false
+    expect(:get => "/user_note").to route_to("app_base#query_user_note")
+  end
 
 end

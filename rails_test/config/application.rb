@@ -21,7 +21,7 @@ module RailsTest
     # config.i18n.default_locale = :de
     config.appbase.enabled = true
     config.appbase.user_identity = :User
-    config.appbase.models.push :User, :Note
+    config.appbase.models.push :User, :Note, :UserNote
     config.appbase.mount = "/_app"
   end
 end
