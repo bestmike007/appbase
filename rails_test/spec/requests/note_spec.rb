@@ -85,5 +85,22 @@ RSpec.describe "Note", :type => :request do
       expect(rs["data"].class).to equal(Array)
       expect(rs["data"].count).to eq 1
     end
+    
+    it "can create & update & delete note" do
+      post '/_app/note', user_id: @user.id, title: "Test3", content: "Hello Appbase!"
+      rs = JSON.parse @response.body
+      expect(rs["status"]).to eq('ok')
+      expect(rs["id"]).to be > 0
+      created_id = rs["id"]
+      expect(Note.find(created_id).nil?).to be false
+      put "/_app/note/#{created_id}", title: "Appbase Test"
+      rs = JSON.parse @response.body
+      expect(rs["status"]).to eq('ok')
+      expect(Note.find(created_id).title).to eq "Appbase Test"
+      delete "/_app/note/#{created_id}"
+      rs = JSON.parse @response.body
+      expect(rs["status"]).to eq('ok')
+      expect{ Note.find(created_id) }.to raise_error ActiveRecord::RecordNotFound
+    end
   end
 end

@@ -1,6 +1,6 @@
 class User < ActiveRecord::Base
   
-  expose_to_appbase :authenticate, auth: false
+  expose_to_appbase :authenticate, :create_user, auth: false
   
   class << User
     def authenticate_by_token(email, token)
@@ -14,6 +14,10 @@ class User < ActiveRecord::Base
       user.last_usage = Time.now
       user.save!
       user.session_token
+    end
+    
+    def create_user(email, password)
+      User.create(email: email, password: password)
     end
   end
 end

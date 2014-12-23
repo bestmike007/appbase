@@ -11,6 +11,8 @@ RSpec.describe AppBaseController, :type => :routing do
   it "contains routes to user model" do
     expect(AppBaseController.instance_methods(false).index(:rpc_user_authenticate).nil?).to be false
     expect(:post => "/user/authenticate").to route_to("app_base#rpc_user_authenticate")
+    expect(AppBaseController.instance_methods(false).index(:rpc_user_create_user).nil?).to be false
+    expect(:post => "/user/create_user").to route_to("app_base#rpc_user_create_user")
   end
   
   it "contains routes to note model" do
