@@ -37,7 +37,7 @@ module AppBase
           when :create
             AppBaseController.add_create_stub(model)
             AppBase::Engine.routes.append do
-              put "/#{model_name_underscore}" => "app_base#create_#{model_name_underscore}"
+              post "/#{model_name_underscore}" => "app_base#create_#{model_name_underscore}"
             end
           when :update
             AppBaseController.add_update_stub(model)

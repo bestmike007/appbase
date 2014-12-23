@@ -15,7 +15,7 @@ RSpec.describe AppBaseController, :type => :routing do
   
   it "contains routes to note model" do
     expect(AppBaseController.instance_methods(false).index(:create_note).nil?).to be false
-    expect(:put => "/note").to route_to("app_base#create_note")
+    expect(:post => "/note").to route_to("app_base#create_note")
     expect(AppBaseController.instance_methods(false).index(:update_note).nil?).to be false
     expect(:put => "/note/1").to route_to("app_base#update_note", :id => '1')
     expect(AppBaseController.instance_methods(false).index(:delete_note).nil?).to be false

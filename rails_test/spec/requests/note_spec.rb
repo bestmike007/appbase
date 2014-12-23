@@ -42,7 +42,7 @@ RSpec.describe "Note", :type => :request do
     end
     
     it "has no notes in the future" do
-      get "/_app/note?created_at.gt=#{Time.now.to_s.gsub /\s/, '%20'}"
+      get "/_app/note?created_at.gt=#{Time.now.to_s.gsub(/\s/, '%20')}"
       rs = JSON.parse @response.body
       puts @response.body if rs["status"] != 'ok'
       expect(rs["status"]).to eq('ok')

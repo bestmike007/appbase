@@ -155,7 +155,7 @@ Basic CRUD api conforms to the representational state transfer (REST) architectu
 Request to create a model with JSON serialized body:
 
 ```
-PUT /_api/note HTTP/1.1
+POST /_api/note HTTP/1.1
 HOST xxx
 Content-Type: application/json
 
@@ -180,7 +180,7 @@ HTTP/1.1 200 OK
 
 #### Update
 
-Almost the same as create except for adding the `:id` parameter (e.g. `/_api/note/:id`):
+Almost the same as create except for using `PUT` and adding the `:id` parameter (e.g. `/_api/note/:id`):
 
 ```
 PUT /_api/note/1 HTTP/1.1
