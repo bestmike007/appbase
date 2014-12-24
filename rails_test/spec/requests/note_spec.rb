@@ -102,5 +102,13 @@ RSpec.describe "Note", :type => :request do
       expect(rs["status"]).to eq('ok')
       expect{ Note.find(created_id) }.to raise_error ActiveRecord::RecordNotFound
     end
+    
+    it "get latest note" do
+      post '/_app/user_note/latest_note'
+      rs = JSON.parse @response.body
+      expect(rs["status"]).to eq('ok')
+      expect(rs["data"]["title"]).to eq "Test2"
+      
+    end
   end
 end
