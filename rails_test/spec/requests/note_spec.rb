@@ -93,6 +93,7 @@ RSpec.describe "Note", :type => :request do
       expect(rs["id"]).to be > 0
       created_id = rs["id"]
       expect(Note.find(created_id).nil?).to be false
+      expect(Note.all.count).to eq 3
       put "/_app/note/#{created_id}", title: "Appbase Test"
       rs = JSON.parse @response.body
       expect(rs["status"]).to eq('ok')

@@ -31,41 +31,30 @@ class AppBaseController < ActionController::Base
       model.columns.map { |item| item.name }
     end
     
-    def add_create_stub(model)
-      m = model.name
+    def add_stub(op, m, prepare)
       self.class_eval %-
-        def create_#{AppBase.underscore m}
-          obj = #{m}.new(params.except(:action, :controller, :id).permit(#{columns(model).to_json}))
-          if !#{m}.allow_create?(current_user, obj)
-            render json: { status: "error", msg: "unauthorized" }
-          else
-            obj.save!
-            render json: { status: 'ok', id: obj.id }
-          end
+        def #{op}_#{AppBase.underscore m}
+          #{prepare}
+          raise 'unauthorized' if !#{m}.allow_#{op}?(current_user, obj)
+          raise "unknown_error" if !obj.save!
+          render json: { status: 'ok'#{ op == :create ? ", id: obj.id" : "" } }
         rescue Exception => e
           render json: { status: 'error', msg: e.to_s }
         end
       -
     end
     
+    def add_create_stub(model)
+      add_stub :create, model.name, %-
+          obj = #{model.name}.new(params.except(:action, :controller, :id).permit([#{columns(model).map{|c|":"+c}.join(", ")}]))
+      -
+    end
+    
     def add_update_stub(model)
-      m = model.name
-      self.class_eval %-
-        def update_#{AppBase.underscore m}
-          obj = #{m}.find(params[:id])
-          if obj.nil?
-            return render json: { status: 'error', msg: 'not_found' }
-          end
-          obj.update_attributes(params.except(:action, :controller, :id).permit(#{columns(model).to_json}))
-          if !#{m}.allow_update?(current_user, obj)
-            render json: { status: "error", msg: "unauthorized" }
-          else
-            obj.save!
-            render json: { status: 'ok' }
-          end
-        rescue Exception => e
-          render json: { status: 'error', msg: e.to_s }
-        end
+      add_stub :update, model.name, %-
+          obj = #{model.name}.find(params[:id])
+          raise 'not_found' if obj.nil?
+          obj.update_attributes(params.except(:action, :controller, :id).permit([#{columns(model).map{|c|":"+c}.join(", ")}]))
       -
     end
     
