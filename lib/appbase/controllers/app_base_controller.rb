@@ -27,12 +27,15 @@ class AppBaseController < ActionController::Base
       -
     end
     
+    def columns(model)
+      model.columns.map { |item| item.name }
+    end
+    
     def add_create_stub(model)
       m = model.name
-      permits = model.columns.map { |item| item.name }.to_json
       self.class_eval %-
         def create_#{AppBase.underscore m}
-          obj = #{m}.new(params.except(:action, :controller, :id).permit(#{permits}))
+          obj = #{m}.new(params.except(:action, :controller, :id).permit(#{columns(model).to_json}))
           if !#{m}.allow_create?(current_user, obj)
             render json: { status: "error", msg: "unauthorized" }
           else
@@ -47,14 +50,13 @@ class AppBaseController < ActionController::Base
     
     def add_update_stub(model)
       m = model.name
-      permits = model.columns.map { |item| item.name }.to_json
       self.class_eval %-
         def update_#{AppBase.underscore m}
           obj = #{m}.find(params[:id])
           if obj.nil?
             return render json: { status: 'error', msg: 'not_found' }
           end
-          obj.update_attributes(params.except(:action, :controller, :id).permit(#{permits}))
+          obj.update_attributes(params.except(:action, :controller, :id).permit(#{columns(model).to_json}))
           if !#{m}.allow_update?(current_user, obj)
             render json: { status: "error", msg: "unauthorized" }
           else
@@ -89,7 +91,6 @@ class AppBaseController < ActionController::Base
     
     def add_query_stub(model)
       m = model.name
-      columns = model.columns.map{|c|c.name}
       self.class_eval %-
         def query_#{AppBase.underscore m}
           query = #{m}.accessible_by(current_user)
