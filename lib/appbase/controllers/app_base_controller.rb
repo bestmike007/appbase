@@ -27,43 +27,42 @@ class AppBaseController < ActionController::Base
       -
     end
     
-    def add_create_stub(model)
+    def permits(model, arg_str=false)
+      if arg_str
+        "[#{model.columns.map { |item| ":" + item.name }.join(", ")}]"
+      else
+        model.columns.map { |item| item.name.to_sym }
+      end
+    end
+    
+    def add_create_or_update_stub(op, model, prepare)
       m = model.name
-      permits = model.columns.map { |item| item.name }.to_json
       self.class_eval %-
-        def create_#{AppBase.underscore m}
-          obj = #{m}.new(params.except(:action, :controller, :id).permit(#{permits}))
-          if !#{m}.allow_create?(current_user, obj)
-            render json: { status: "error", msg: "unauthorized" }
-          else
-            obj.save!
-            render json: { status: 'ok', id: obj.id }
-          end
+        def #{op}_#{AppBase.underscore m}
+          #{prepare}
+          raise "unauthorized" if !#{m}.allow_#{op}?(current_user, obj)
+          obj.save!
+          rs = { status: 'ok' }
+          #{ 'rs[:id] = obj.id' if op == :create }
+          render json: rs
         rescue Exception => e
           render json: { status: 'error', msg: e.to_s }
         end
       -
     end
+    private :add_create_or_update_stub
+    
+    def add_create_stub(model)
+      add_create_or_update_stub :create, model, %-
+          obj = #{model.name}.new(params.except(:action, :controller, :id).permit(#{permits(model, true)}))
+      -
+    end
     
     def add_update_stub(model)
-      m = model.name
-      permits = model.columns.map { |item| item.name }.to_json
-      self.class_eval %-
-        def update_#{AppBase.underscore m}
-          obj = #{m}.find(params[:id])
-          if obj.nil?
-            return render json: { status: 'error', msg: 'not_found' }
-          end
-          obj.update_attributes(params.except(:action, :controller, :id).permit(#{permits}))
-          if !#{m}.allow_update?(current_user, obj)
-            render json: { status: "error", msg: "unauthorized" }
-          else
-            obj.save!
-            render json: { status: 'ok' }
-          end
-        rescue Exception => e
-          render json: { status: 'error', msg: e.to_s }
-        end
+      add_create_or_update_stub :update, model, %-
+          obj = #{model.name}.find(params[:id])
+          raise 'not_found' if obj.nil?
+          obj.update_attributes(params.except(:action, :controller, :id).permit(#{permits(model, true)}))
       -
     end
     
@@ -89,7 +88,6 @@ class AppBaseController < ActionController::Base
     
     def add_query_stub(model)
       m = model.name
-      columns = model.columns.map{|c|c.name}
       self.class_eval %-
         def query_#{AppBase.underscore m}
           query = #{m}.accessible_by(current_user)
@@ -141,36 +139,69 @@ class AppBaseController < ActionController::Base
     end
     
     def add_rpc_method_stub(bound_method, auth=false)
-      m = bound_method.receiver.name
-      mn = bound_method.name
-      parameters = bound_method.parameters
-      if auth && (parameters.count == 0 || parameters[0][0] != :req)
-        raise "#{m}.#{mn} does not accept current user identity as the first parameter. Using `expose_to_appbase :method_name, auth: false` to expose #{m}.#{mn} to appbase without user authentication."
+      RpcMethodStubHelper.new(bound_method, auth).add_stub(self)
+    end
+    
+    class RpcMethodStubHelper
+      
+      def initialize(bound_method, auth=false)
+        @bound_method = bound_method
+        @auth = auth
+        @method_name = bound_method.name
+        @model_name = bound_method.receiver.name.to_s.extend(AppBase::StringExtension)
+        init
       end
-      need_params = false
-      if parameters.count > 0 && parameters.last[0] == :opt
-        need_params = true
-        parameters = parameters[(auth ? 1 : 0)..-2]
-      else
-        parameters = parameters[(auth ? 1 : 0)..-1]
+      
+      def add_stub(controller)
+        controller.class_eval %-
+          def rpc_#{@model_name.underscore}_#{@method_name}
+            #{@requires.map{|p|"params.require #{p}"}.join(';')}
+            render json: { status: 'ok', data: #{@model_name}.#{@method_name}(#{@parameters.join(', ')}) }
+          rescue Exception => e
+            render json: { status: 'error', msg: e.to_s }
+          end
+        -
       end
-      if parameters.find{|p|p[0]!=:req}
-        raise "Error exposing #{m}.#{mn} to appbase engine, appbase does not support rest/optional parameters, use options instead!"
-      end
-      requires = parameters.map{|p|":#{p[1]}"}
-      parameters = auth ? ['current_user'] : []
-      requires.each { |p| parameters << "params[#{p}]" }
-      if need_params
-        parameters.push "params.except(:action, :controller#{requires.count > 0 ? ", #{requires.join(', ')}" : ""})"
-      end
-      self.class_eval %-
-        def rpc_#{AppBase.underscore m}_#{mn}
-          #{requires.map{|p|"params.require #{p}"}.join(';')}
-          render json: { status: 'ok', data: #{m}.#{mn}(#{parameters.join(', ')}) }
-        rescue Exception => e
-          render json: { status: 'error', msg: e.to_s }
+      
+      private
+      def init
+        init_parameters do |parameters, need_params|
+          @requires = parameters.map{|p|":#{p[1]}"}
+          @parameters = @auth ? ['current_user'] : []
+          @requires.each { |p| @parameters << "params[#{p}]" }
+          if need_params
+            @parameters.push "params.except(:action, :controller#{@requires.count > 0 ? ", #{@requires.join(', ')}" : ""})"
+          end
         end
-      -
+      end
+      
+      def pre_init_parameters(parameters)
+        if @auth && (parameters.count == 0 || parameters[0][0] != :req)
+          raise "#{@model_name}.#{@method_name} does not accept current user identity as the first parameter. Using `expose_to_appbase :method_name, auth: false` to expose #{@model_name}.#{@method_name} to appbase without user authentication."
+        end
+      end
+      
+      def post_init_parameters(parameters)
+        if parameters.find{|p|p[0]!=:req}
+          raise "Error exposing #{@model_name}.#{@method_name} to appbase engine, appbase does not support rest/optional parameters, use options instead!"
+        end
+      end
+      
+      def init_parameters
+        parameters = @bound_method.parameters
+        pre_init_parameters(parameters)
+        
+        need_params = false
+        if parameters.count > 0 && parameters.last[0] == :opt
+          need_params = true
+          parameters = parameters[(@auth ? 1 : 0)..-2]
+        else
+          parameters = parameters[(@auth ? 1 : 0)..-1]
+        end
+        
+        post_init_parameters(parameters)
+        yield parameters, need_params
+      end
     end
     
   end
