@@ -30,32 +30,17 @@ module AppBase
         AppBase::Engine::UserIdentity = config.user_identity.to_s.extend AppBase::StringExtension
         AppBaseController.define_useridentity config.user_identity, config.token_store, config.token_key_user, config.token_key_session
         
+        http_methods = { create: :post, update: :put, delete: :delete, query: :get }
+        
         # initialize crud stubs
         AppBase::Registry.each_crud config.models do |model, op|
+          raise "Unexpected crud operation: #{op}" if !http_methods.has_key?(op)
           model_name_underscore = AppBase.underscore model.name
-          case op
-          when :create
-            AppBaseController.add_create_stub(model)
-            AppBase::Engine.routes.append do
-              post "/#{model_name_underscore}" => "app_base#create_#{model_name_underscore}"
-            end
-          when :update
-            AppBaseController.add_update_stub(model)
-            AppBase::Engine.routes.append do
-              put "/#{model_name_underscore}/:id" => "app_base#update_#{model_name_underscore}"
-            end
-          when :delete
-            AppBaseController.add_delete_stub(model)
-            AppBase::Engine.routes.append do
-              delete "/#{model_name_underscore}/:id" => "app_base#delete_#{model_name_underscore}"
-            end
-          when :query
-            AppBaseController.add_query_stub(model)
-            AppBase::Engine.routes.append do
-              get "/#{model_name_underscore}" => "app_base#query_#{model_name_underscore}"
-            end
-          else
-            raise "Unexpected crud operation: #{op}"
+          AppBaseController.send "add_#{op}_stub".to_sym, model
+          url_path = "/#{model_name_underscore}"
+          url_path += "/:id" if op == :update || op == :delete
+          AppBase::Engine.routes.append do
+            match url_path, to: "app_base##{op}_#{model_name_underscore}", via: http_methods[op]
           end
         end
         
