@@ -23,36 +23,64 @@ module AppBase
     # used once upon rails startup, cannot be reloaded by spring.
     class << Registry
       
-      rpc_methods = []
-      crud_permissions = []
+      class RegistryTable
+        
+        def initialize
+          @rpc_methods = []
+          @crud_permissions = []
+        end
+        
+        def contains_rpc_registry(item)
+          !@rpc_methods.find{ |r| r[:model] == item[:model] && r[:method] == item[:method] }.nil?
+        end
+        
+        def register_rpc(model, method_name, options={})
+          rpc_registry_item = {
+            model: (model.instance_of?(String) || model.instance_of?(Symbol)) ? Object.const_get(model.to_sym) : model,
+            method: method_name.to_sym,
+            auth: options.has_key?(:auth) ? options[:auth] : true
+          }
+          raise "#{model}.#{method_name} has already been registered" if contains_rpc_registry(rpc_registry_item)
+          @rpc_methods << rpc_registry_item
+        end
+        
+        def register_crud(model, crud)
+          if @crud_permissions.find{ |r| r[:model] == model && r[:crud] == crud }.nil?
+            @crud_permissions << { model: model, crud: crud }
+          end
+        end
       
-      define_method :register_rpc do |model, method_name, options={}|
-        model = Object.const_get(model.to_sym) if model.instance_of?(String) || model.instance_of?(Symbol)
-        method_name = method_name.to_sym
-        auth = options.has_key?(:auth) ? options[:auth] : true
-        if rpc_methods.find{ |r| r[:model] == model && r[:method] == method_name }.nil?
-          rpc_methods << { model: model, method: method_name, auth: auth }
-        else
-          raise "#{model}.#{method_name} has already been registered"
+        def each_rpc(&block)
+          @rpc_methods.each(&block)
+        end
+        
+        def each_crud(*models, &block)
+          models = models.flatten.map { |model| (model.instance_of?(Symbol) || model.instance_of?(String)) ? Object.const_get(model) : model }
+          @crud_permissions.each do |r|
+            block.call r[:model], r[:crud] if models.index(r[:model])
+          end
         end
       end
       
-      define_method :each_rpc do |&block|
-        rpc_methods.each &block
+      def register_rpc(model, method_name, options={})
+        instance.register_rpc(model, method_name, options)
       end
       
-      define_method :register_crud do |model, crud|
-        if crud_permissions.find{ |r| r[:model] == model && r[:crud] == crud }.nil?
-          crud_permissions << { model: model, crud: crud }
-        end
+      def register_crud(model, crud)
+        instance.register_crud(model, crud)
       end
       
-      define_method :each_crud do |*models, &block|
-        models = models[0] if models.count == 1 && models.instance_of?(Array)
-        models = models.map { |model| (model.instance_of?(Symbol) || model.instance_of?(String)) ? Object.const_get(model) : model }
-        crud_permissions.each do |r|
-          block.call r[:model], r[:crud] if models.index(r[:model])
-        end
+      def each_rpc(&block)
+        instance.each_rpc(&block)
+      end
+      
+      def each_crud(*models, &block)
+        instance.each_crud(*models, &block)
+      end
+      
+      private 
+      def instance
+        @instance ||= RegistryTable.new
       end
       
     end
