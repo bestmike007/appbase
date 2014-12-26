@@ -7,6 +7,7 @@ rvm:
   - rbx
 before_script:
   - "export DISPLAY=:99.0"
+  - "export CODECLIMATE_REPO_TOKEN=bf78ccc2636092420716514602a3fb6e175221c9716ad47af644150b0e50b2c1"
   - "cd rails_test"
   - "bundle install"
   - "rake db:setup RAILS_ENV=test"
