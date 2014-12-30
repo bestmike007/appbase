@@ -186,10 +186,11 @@ module AppBase
     end
 
     def enabled
-      if File.basename(ENV['_']) == 'rake'
+      basename = ENV['_'].nil? ? nil : File.basename(ENV['_'])
+      if basename == 'rake'
         puts "Running with `rake #{$*.join(' ')}`"
       end
-      config.appbase.enabled && (File.basename(ENV['_']) != 'rake' || $*[0] == 'routes')
+      config.appbase.enabled && (basename != 'rake' || $*[0] == 'routes')
     end
     
     setup_default config

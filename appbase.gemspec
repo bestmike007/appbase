@@ -12,6 +12,6 @@ Gem::Specification.new do |s|
   s.files       = Dir['lib/**/*'] + ['LICENSE', 'README.md', 'appbase.gemspec']
   
   s.required_ruby_version = '>= 1.9.0'
-  s.add_runtime_dependency 'rails', '>= 4.0', '< 4.2'
+  s.add_runtime_dependency 'rails', '>= 4.0', '< 4.3'
   s.add_development_dependency "rspec-rails", "~> 3.1", '>= 3.1.0'
 end
