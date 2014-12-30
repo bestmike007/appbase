@@ -22,7 +22,7 @@ ActiveRecord::Schema.define(version: 20141219060008) do
   end
 
   create_table "users", force: true do |t|
-    t.binary   "email",         limit: 256, null: false
+    t.string   "email",         limit: 256, null: false
     t.string   "password",      limit: 128, null: false
     t.datetime "last_usage"
     t.string   "last_ip",       limit: 15

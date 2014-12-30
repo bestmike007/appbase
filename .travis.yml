@@ -10,4 +10,6 @@ before_script:
   - "cd rails_test"
   - "bundle install"
   - "rake db:setup RAILS_ENV=test"
-script: rspec
+script:
+  - rspec
+  - "export RAILS_VERSION=4.1.8; bundle update && rspec"
