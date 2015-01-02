@@ -39,6 +39,8 @@
         </div>
 
         <p><a href="https://travis-ci.org/bestmike007/appbase"><img src="https://travis-ci.org/bestmike007/appbase.svg?branch=master" alt="Build Status"></a>
+<a href="https://codeclimate.com/github/bestmike007/appbase"><img src="https://codeclimate.com/github/bestmike007/appbase/badges/gpa.svg" alt="Code Climate"></a>
+<a href="https://codeclimate.com/github/bestmike007/appbase"><img src="https://codeclimate.com/github/bestmike007/appbase/badges/coverage.svg" alt="Test Coverage"></a>
 <a href="http://badge.fury.io/rb/appbase"><img src="https://badge.fury.io/rb/appbase.svg" alt="Gem Version"></a></p>
 
 <p>Nowadays BaaS and mBaaS platforms (e.g. <a href="https://www.firebase.com/">firebase</a>, <a href="https://www.parse.com/">parse</a>, <a href="https://appbase.io/">appbase.io</a>) abound. Open source solutions (e.g. <a href="http://usergrid.incubator.apache.org/">usergrid</a> using LAMP, <a href="http://helios.io/">helios</a> using Ruby, <a href="http://deployd.com/">deployd</a> and <a href="http://strongloop.com/">StrongLoop</a> using nodejs, and a lot more) are also available. And appbase is much less than those.</p>
@@ -194,7 +196,7 @@
 
 <p>Request to create a model with JSON serialized body:</p>
 
-<pre><code>PUT /_api/note HTTP/1.1
+<pre><code>POST /_api/note HTTP/1.1
 HOST xxx
 Content-Type: application/json
 
@@ -218,7 +220,7 @@ Content-Type: application/json
 <h4>
 <a id="update" class="anchor" href="#update" aria-hidden="true"><span class="octicon octicon-link"></span></a>Update</h4>
 
-<p>Almost the same as create except for adding the <code>:id</code> parameter (e.g. <code>/_api/note/:id</code>):</p>
+<p>Almost the same as create except for using <code>PUT</code> and adding the <code>:id</code> parameter (e.g. <code>/_api/note/:id</code>):</p>
 
 <pre><code>PUT /_api/note/1 HTTP/1.1
 HOST xxx
